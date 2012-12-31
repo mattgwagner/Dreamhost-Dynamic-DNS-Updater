@@ -28,9 +28,7 @@ namespace DHDns.Service
         private class TaskService : ServiceControl
         {
             private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
-            private const string API_URL = "https://api.dreamhost.com";
-            private readonly IConfig Config = new FileConfig();
+            private static readonly IConfig Config = new FileConfig();
 
             private readonly IScheduler scheduler;
 
