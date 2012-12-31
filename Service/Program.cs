@@ -30,7 +30,7 @@ namespace DHDns.Service
             private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
             private const string API_URL = "https://api.dreamhost.com";
-            private static readonly int Interval_Minutes = int.Parse(ConfigurationManager.AppSettings["Update_Interval_Minutes"]);
+            private readonly IConfig Config = new FileConfig();
 
             private readonly IScheduler scheduler;
 
@@ -48,7 +48,7 @@ namespace DHDns.Service
 
                 var trigger = TriggerBuilder.Create()
                     .ForJob(job)
-                    .WithCalendarIntervalSchedule(x => x.WithIntervalInMinutes(Interval_Minutes))
+                    .WithCalendarIntervalSchedule(x => x.WithIntervalInMinutes(Config.UpdateInterval))
                     .StartNow()
                     .Build();
 
