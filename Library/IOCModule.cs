@@ -6,7 +6,7 @@ namespace DHDns.Library
     {
         public override void Load()
         {
-            // TODO
+            Bind<IConfig>().To<FileConfig>();
         }
     }
 }
