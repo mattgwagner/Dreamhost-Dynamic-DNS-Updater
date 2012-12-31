@@ -1,6 +1,6 @@
 ﻿using Ninject.Modules;
 
-namespace DHDns
+namespace DHDns.Library
 {
     public class IOCModule : NinjectModule
     {

@@ -1,13 +1,15 @@
-﻿using NLog;
+﻿using DHDns.Library;
+using NLog;
 using Quartz;
 using Quartz.Impl;
+using System.Configuration;
 using Topshelf;
 
-namespace DHDns
+namespace DHDns.Service
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             HostFactory.Run(x =>
             {
@@ -23,9 +25,12 @@ namespace DHDns
             });
         }
 
-        class TaskService : ServiceControl
+        private class TaskService : ServiceControl
         {
             private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+            private const string API_URL = "https://api.dreamhost.com";
+            private static readonly int Interval_Minutes = int.Parse(ConfigurationManager.AppSettings["Update_Interval_Minutes"]);
 
             private readonly IScheduler scheduler;
 
@@ -39,7 +44,15 @@ namespace DHDns
             {
                 Log.Trace("Starting Service...");
 
-                // TODO Configure Job
+                var job = new JobDetailImpl("UpdateJob", typeof(UpdateJob));
+
+                var trigger = TriggerBuilder.Create()
+                    .ForJob(job)
+                    .WithCalendarIntervalSchedule(x => x.WithIntervalInMinutes(Interval_Minutes))
+                    .StartNow()
+                    .Build();
+
+                this.scheduler.ScheduleJob(trigger);
 
                 return true;
             }

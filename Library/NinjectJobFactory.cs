@@ -3,7 +3,7 @@ using Ninject.Modules;
 using Quartz;
 using Quartz.Spi;
 
-namespace DHDns
+namespace DHDns.Library
 {
     public class NinjectJobFactory : IJobFactory
     {
