@@ -1,7 +1,9 @@
 ﻿using Quartz;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 
 namespace DHDns.Library
 {
@@ -36,20 +38,59 @@ namespace DHDns.Library
 
         public virtual IEnumerable<DnsRecord> GetDNSRecords(IConfig config)
         {
-            throw new NotImplementedException();
+            // TODO Get the existing records
+
+            var uri = String.Format("{0}?key={1}&unique_id={2}&cmd={3}",
+                config.APIUrl,
+                config.APIKey,
+                config.Username,
+                "dns-list_records");
+
+            var request = WebRequest.CreateHttp(uri);
         }
 
         public virtual String GetCurrentIP(IConfig config)
         {
-            throw new NotImplementedException();
+            // TODO Make this swappable?
+
+            var request = WebRequest.CreateHttp("http://www.joshlange.net/cgi/get_ip.pl");
+
+            var response = request.GetResponse();
+
+            using (var stream = response.GetResponseStream())
+            using (var reader = new StreamReader(stream))
+            {
+                return reader.ReadToEnd();
+            }
         }
 
         public virtual Boolean UpdateDNSRecord(IConfig config, String newIpAddress)
         {
-            throw new NotImplementedException();
+            // TODO Remove the old record
+
+            var uri = String.Format("{0}?key={1}&unique_id={2}&cmd={3}",
+                config.APIUrl,
+                config.APIKey,
+                config.Username,
+                "dns-remove_record");
+
+            var request = WebRequest.CreateHttp(uri);
+
+            // TODO Add the new record
+
+            var uri2 = String.Format("{0}?key={1}&unique_id={2}&cmd={3}",
+                config.APIUrl,
+                config.APIKey,
+                config.Username,
+                "dns-add_record");
+
+            var request2 = WebRequest.CreateHttp(uri2);
+
+
+            return false;
         }
 
-        class DnsRecord
+        private class DnsRecord
         {
             public String Hostname { get; set; }
             public String IPAddress { get; set; }
