@@ -9,12 +9,7 @@ namespace DHDns.Library
     public class UpdateJob : IJob
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-        private readonly IConfig config;
-
-        public UpdateJob(IConfig config)
-        {
-            this.config = config;
-        }
+        private readonly IConfig config = new FileConfig();
 
         public void Execute(IJobExecutionContext context)
         {
@@ -55,7 +50,7 @@ namespace DHDns.Library
             using (var stream = response.GetResponseStream())
             using (var reader = new StreamReader(stream))
             {
-                return reader.ReadToEnd();
+                return reader.ReadToEnd().Replace("\n", String.Empty);
             }
         }
 
@@ -100,10 +95,10 @@ namespace DHDns.Library
 
         public virtual String SendCmd(IConfig config, String cmd, String data = "")
         {
-            var request = WebRequest.CreateHttp(String.Format("{0}?key={1}&unique_id={2}&cmd={3}",
+            var request = WebRequest.CreateHttp(String.Format("{0}?key={1}&unique_id={2}&format=XML&cmd={3}",
                 config.APIUrl,
                 config.APIKey,
-                config.Username,
+                Guid.NewGuid(),
                 cmd));
 
             var response = request.GetResponse();

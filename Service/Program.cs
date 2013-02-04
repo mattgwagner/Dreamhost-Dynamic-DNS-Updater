@@ -1,5 +1,6 @@
 ﻿using DHDns.Library;
 using NLog;
+using NLog.Config;
 using Quartz;
 using Quartz.Impl;
 using Topshelf;
@@ -38,9 +39,11 @@ namespace DHDns.Service
 
             public bool Start(HostControl hostControl)
             {
-                Log.Trace("Starting Service...");
+                Log.Info("Starting Dynamic DNS Update Service...");
 
-                var job = new JobDetailImpl("UpdateJob", typeof(UpdateJob));
+                var job = JobBuilder.Create()
+                    .OfType<UpdateJob>()
+                    .Build();
 
                 var trigger = TriggerBuilder.Create()
                     .ForJob(job)
@@ -57,7 +60,7 @@ namespace DHDns.Service
 
             public bool Stop(HostControl hostControl)
             {
-                Log.Trace("Stopping Service...");
+                Log.Info("Stopping Service...");
 
                 this.scheduler.Standby();
 
