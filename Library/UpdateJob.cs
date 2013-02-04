@@ -23,7 +23,7 @@ namespace DHDns.Library
             // Get current IP
             var currentIp = GetCurrentIP(this.config);
 
-            Log.Debug("Retreived current IP: {0}", currentIp);
+            Log.Debug("Retrieved current IP: {0}", currentIp);
 
             // Get the existing record
             var existingIp = GetDNSRecord(this.config);
