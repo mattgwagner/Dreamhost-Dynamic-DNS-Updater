@@ -2,7 +2,6 @@
 using NLog;
 using Quartz;
 using Quartz.Impl;
-using System.Configuration;
 using Topshelf;
 
 namespace DHDns.Service
@@ -50,6 +49,8 @@ namespace DHDns.Service
                     .Build();
 
                 this.scheduler.ScheduleJob(job, trigger);
+
+                this.scheduler.Start();
 
                 return true;
             }
