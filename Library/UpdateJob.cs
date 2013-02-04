@@ -1,14 +1,14 @@
-﻿using Quartz;
+﻿using NLog;
+using Quartz;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 
 namespace DHDns.Library
 {
     public class UpdateJob : IJob
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private readonly IConfig config;
 
         public UpdateJob(IConfig config)
@@ -18,35 +18,30 @@ namespace DHDns.Library
 
         public void Execute(IJobExecutionContext context)
         {
-            // Get existing DNS records
-            var existing = GetDNSRecords(this.config).SingleOrDefault(record => record.Hostname == this.config.Hostname);
-
-            // If there wasn't a matching record, nothing to update
-            // TODO Create record if one doesn't exist?
-            if (existing == null) return;
+            Log.Info("Starting UpdateJob...");
 
             // Get current IP
             var currentIp = GetCurrentIP(this.config);
 
-            // Compare existing record to current IP
-            if (existing.IPAddress != currentIp)
+            Log.Debug("Retreived current IP: {0}", currentIp);
+
+            // Get the existing record
+            var existingIp = GetDNSRecord(this.config);
+
+            Log.Debug("Retrieved existing DNS Record: {0}", existingIp);
+
+            if (currentIp != existingIp)
             {
-                // Update the DNS record
-                UpdateDNSRecord(this.config, currentIp);
+                Log.Debug("Existing record did not match retrieved IP, updating!");
+
+                RemoveDNSRecord(this.config);
+
+                Log.Debug("Removed existing DNS record.");
+
+                AddDNSRecord(this.config, currentIp);
+
+                Log.Debug("Added new DNS record for hostname.");
             }
-        }
-
-        public virtual IEnumerable<DnsRecord> GetDNSRecords(IConfig config)
-        {
-            // TODO Get the existing records
-
-            var uri = String.Format("{0}?key={1}&unique_id={2}&cmd={3}",
-                config.APIUrl,
-                config.APIKey,
-                config.Username,
-                "dns-list_records");
-
-            var request = WebRequest.CreateHttp(uri);
         }
 
         public virtual String GetCurrentIP(IConfig config)
@@ -64,36 +59,60 @@ namespace DHDns.Library
             }
         }
 
-        public virtual Boolean UpdateDNSRecord(IConfig config, String newIpAddress)
+        public virtual String GetDNSRecord(IConfig config)
+        {
+            var response = SendCmd(config, "dns-list_records");
+
+            using (var reader = new StringReader(response))
+            {
+                String line = String.Empty;
+
+                while (!String.IsNullOrWhiteSpace(line = reader.ReadLine()))
+                {
+                    Log.Info("Record Line: {0}", line);
+
+                    // TODO Filter on hostname?
+
+                    return line;
+                }
+            }
+
+            return String.Empty;
+        }
+
+        public virtual Boolean RemoveDNSRecord(IConfig config)
         {
             // TODO Remove the old record
 
-            var uri = String.Format("{0}?key={1}&unique_id={2}&cmd={3}",
-                config.APIUrl,
-                config.APIKey,
-                config.Username,
-                "dns-remove_record");
-
-            var request = WebRequest.CreateHttp(uri);
-
-            // TODO Add the new record
-
-            var uri2 = String.Format("{0}?key={1}&unique_id={2}&cmd={3}",
-                config.APIUrl,
-                config.APIKey,
-                config.Username,
-                "dns-add_record");
-
-            var request2 = WebRequest.CreateHttp(uri2);
-
+            var deleteResponse = SendCmd(config, "dns-delete_record", config.Hostname);
 
             return false;
         }
 
-        private class DnsRecord
+        public virtual Boolean AddDNSRecord(IConfig config, String newIpAddress)
         {
-            public String Hostname { get; set; }
-            public String IPAddress { get; set; }
+            // TODO Add the new record
+
+            var addResponse = SendCmd(config, "dns-add_record", newIpAddress);
+
+            return false;
+        }
+
+        public virtual String SendCmd(IConfig config, String cmd, String data = "")
+        {
+            var request = WebRequest.CreateHttp(String.Format("{0}?key={1}&unique_id={2}&cmd={3}",
+                config.APIUrl,
+                config.APIKey,
+                config.Username,
+                cmd));
+
+            var response = request.GetResponse();
+
+            using (var stream = response.GetResponseStream())
+            using (var reader = new StreamReader(stream))
+            {
+                return reader.ReadToEnd();
+            }
         }
     }
 }
