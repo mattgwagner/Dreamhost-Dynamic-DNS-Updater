@@ -2,7 +2,9 @@
 using Quartz;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Xml.Linq;
 
 namespace DHDns.Library
 {
@@ -29,7 +31,7 @@ namespace DHDns.Library
             {
                 Log.Debug("Existing record did not match retrieved IP, updating!");
 
-                RemoveDNSRecord(this.config);
+                RemoveDNSRecord(this.config, existingIp);
 
                 Log.Debug("Removed existing DNS record.");
 
@@ -54,46 +56,67 @@ namespace DHDns.Library
             }
         }
 
+        /*
+         * <?xml version="1.0"?>
+         * <dreamhost>
+             *  <data>
+             *      <account_id>687777</account_id>
+             *      <comment/>
+             *      <editable>1</editable>
+             *      <record>home.mattgwagner.com</record>
+             *      <type>A</type>
+             *      <value>70.127.40.169</value>
+             *      <zone>mattgwagner.com</zone>
+             *  </data>
+         *  </dreamhost>
+         */
+
         public virtual String GetDNSRecord(IConfig config)
         {
+            // Send the cmd, get back XML records
             var response = SendCmd(config, "dns-list_records");
 
-            using (var reader = new StringReader(response))
+            var doc = XDocument.Parse(response);
+
+            // TODO Check if 'A' record
+            // TODO Check if 'editable'
+
+            var records = from data in doc.Element("dreamhost").Descendants("data")
+                          let r = new
+                          {
+                              Record = data.Element("record").Value,
+                              Value = data.Element("value").Value,
+                              Editable = data.Element("editable").Value,
+                              Type = data.Element("type").Value
+                          }
+                          where r.Record == config.Hostname
+                          select r;
+
+            // We should have one that matches.
+            if (records.Any())
             {
-                String line = String.Empty;
-
-                while (!String.IsNullOrWhiteSpace(line = reader.ReadLine()))
-                {
-                    Log.Info("Record Line: {0}", line);
-
-                    // TODO Filter on hostname?
-
-                    return line;
-                }
+                return records.Single().Value;
             }
 
+            // Otherwise, just return an empty string.
             return String.Empty;
         }
 
-        public virtual Boolean RemoveDNSRecord(IConfig config)
+        public virtual void RemoveDNSRecord(IConfig config, String existingIp)
         {
-            // TODO Remove the old record
+            String cmd = String.Format("dns-remove_record&record={0}&value={1}&type=A", config.Hostname, existingIp);
 
-            var deleteResponse = SendCmd(config, "dns-delete_record", config.Hostname);
-
-            return false;
+            var deleteResponse = SendCmd(config, cmd);
         }
 
-        public virtual Boolean AddDNSRecord(IConfig config, String newIpAddress)
+        public virtual void AddDNSRecord(IConfig config, String newIpAddress)
         {
-            // TODO Add the new record
+            String cmd = String.Format("dns-add_record&record={0}&value={1}&type=A", config.Hostname, newIpAddress);
 
-            var addResponse = SendCmd(config, "dns-add_record", newIpAddress);
-
-            return false;
+            var addResponse = SendCmd(config, cmd);
         }
 
-        public virtual String SendCmd(IConfig config, String cmd, String data = "")
+        public virtual String SendCmd(IConfig config, String cmd)
         {
             var request = WebRequest.CreateHttp(String.Format("{0}?key={1}&unique_id={2}&format=XML&cmd={3}",
                 config.APIUrl,
