@@ -1,6 +1,12 @@
 Dreamhost-Dynamic-DNS-Updater
 =============================
 
-A work-in-progress to create a Windows Service that will update Dreamhost's DNS entries.
+A small Windows Service that will update Dreamhost's DNS entries to point to your home machine.
 
-To install, run msbuild.exe on the solution (requires allowing NuGet to restore packages) and then run `DHDns.Service.exe install` from a command line.
+== Installation ==
+
+Build the solution either via Visual Studio or via MSBuild. This will require allowing NuGet package restore.
+
+Add your DreamHost API key and host information into the app.config file.
+
+Run `DHDns.Service.exe install` from the command line to install the Windows Service.
