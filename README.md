@@ -5,7 +5,7 @@ A small Windows Service that will update Dreamhost's DNS entries to point to you
 
 ## Building ##
 
-The project is built using C# in Visual Studio 2012. You can also build the project using `msbuild` via the `build.cmd` script in the root of the project. You need to have NuGet Pacakge Restore enabled to allow NuGet to download the supporting libraries (TopShelf and Quartz.net in particular). 
+The project is built using C# in Visual Studio 2012. You can also build the project using `msbuild` via the `build.cmd` script in the root of the project.
 
 Simple logging is doing via NLog to `Logging.log` where the executable is run, but can be configured via *NLog.config*.
 
@@ -13,7 +13,7 @@ Simple logging is doing via NLog to `Logging.log` where the executable is run, b
 
 After the project is built, add your DreamHost API key and host information into the app.config file.
 
-Run `DHDns.Service.exe install` from the command line to install the Windows Service.
+Run `install.cmd` from the root of the directory from the command line to install the Windows Service.
 
 ## Notes ##
 
