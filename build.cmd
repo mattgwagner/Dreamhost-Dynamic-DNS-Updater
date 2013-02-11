@@ -1,5 +1,6 @@
 @echo Off
 
+set EnableNuGetPackageRestore=true
 set targets=%1
 
 if "%targets%" == "" (
