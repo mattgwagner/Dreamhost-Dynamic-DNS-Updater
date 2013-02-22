@@ -18,3 +18,5 @@ Run `install.cmd` from the root of the directory from the command line to instal
 ## Notes ##
 
 Currently, there is no real exception handling in place and the log configuration is the only real output of the service.
+
+If you find this application useful, drop me an email and let me know since there aren't any statistics from GitHub's downloads. If you find a bug, pull requests are the preferred method of assistance!
