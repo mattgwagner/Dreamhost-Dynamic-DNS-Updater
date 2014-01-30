@@ -45,10 +45,12 @@ namespace DHDns.Service
                     .OfType<UpdateJob>()
                     .Build();
 
-                var trigger = TriggerBuilder.Create()
+                ITrigger trigger = TriggerBuilder.Create()
                     .ForJob(job)
-                    .WithCalendarIntervalSchedule(x => x.WithIntervalInMinutes(Config.UpdateInterval))
                     .StartNow()
+                    .WithSimpleSchedule(x => x
+                        .WithIntervalInMinutes(Config.UpdateInterval)
+                        .RepeatForever())
                     .Build();
 
                 this.scheduler.ScheduleJob(job, trigger);
