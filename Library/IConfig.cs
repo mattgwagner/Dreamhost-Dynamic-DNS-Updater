@@ -13,6 +13,7 @@ namespace DHDns.Library
         String Username { get; }
 
         string HostnameCSV { get;}
+
         StringCollection Hostnames { get; }
 
         int UpdateInterval { get; }
