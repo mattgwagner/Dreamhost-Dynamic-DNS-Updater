@@ -25,22 +25,23 @@ namespace DHDns.Library
             Log.Debug("Retrieved current IP: {0}", currentIp);
 
             // Get the existing record
+
             var DNSRecords = GetDNSRecords(this.config);
 
-            Log.Debug("Retrieved existing DNS Records");
+            
             foreach (KeyValuePair<string, string> d in DNSRecords)
             {
                 if (currentIp != d.Value)
                 {
-                    Log.Debug("Existing record {0} did not match retrieved IP, updating!", d.Key);
+                    Log.Info("Existing record {0} did not match retrieved IP, updating!", d.Key);
 
                     RemoveDNSRecord(d.Key, d.Value);
 
-                    Log.Debug("Removed existing DNS record.");
+                    Log.Info("Removed existing DNS record.");
 
                     AddDNSRecord(d.Key, currentIp);
 
-                    Log.Debug("Added new DNS record for {0}.", d.Key);
+                    Log.Info("Added new DNS record for {0}.", d.Key);
                 }
             }
             Log.Info("Finished UpdateJob");
@@ -79,9 +80,16 @@ namespace DHDns.Library
         {
             // Send the cmd, get back XML records
             var response = SendCmd(config, "dns-list_records");
-
-            var doc = XDocument.Parse(response);
-
+            XDocument doc;
+            try
+            {
+                 doc = XDocument.Parse(response);
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorException("failed to parse DNS records from DreamHost", ex);
+                return new List<KeyValuePair<string, string>>(); //return an empty list to prevent cascading exceptions
+            };
             // TODO Check if 'A' record
             //Take each record, check if it matches an entry in the config.Hostnames StringCollection, then compile a list from the records and values that were selected.
             List<KeyValuePair<string, string>> records = new List<KeyValuePair<string, string>>(from data in doc.Element("dreamhost").Descendants("data")
@@ -94,7 +102,7 @@ namespace DHDns.Library
                                                                                                 }
                                                                                                 where config.Hostnames.Contains(r.Record) && r.Editable == "1" //make sure that r is one of the records we want(I.E., listed in appconfig and editable)
                                                                                                 select new KeyValuePair<string, string>(r.Record, r.Value));
-
+            Log.Debug("Retrieved existing DNS Records");
             return records; //records may be empty upon return
         }
 
@@ -104,6 +112,7 @@ namespace DHDns.Library
 
             var deleteResponse = SendCmd(config, cmd);
             Log.Debug("Response after issuing DNS Record delete command: " + deleteResponse); //these responses may be helpful debugging info.
+
         }
 
         public virtual void AddDNSRecord(String hostname, String newIpAddress)
@@ -133,7 +142,7 @@ namespace DHDns.Library
             }
             catch (Exception Ex)
             {
-                Log.ErrorException("There was a problem communicating over the network.", Ex);
+                Log.ErrorException("There was a problem communicating with DreamHost. Check your APIKey", Ex);
                 return String.Empty;
             }
         }
