@@ -5,9 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Xml.Linq;
-
+using System.Collections.Generic;
 namespace DHDns.Library
 {
+
+
     public class UpdateJob : IJob
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -23,21 +25,22 @@ namespace DHDns.Library
             Log.Debug("Retrieved current IP: {0}", currentIp);
 
             // Get the existing record
-            var existingIp = GetDNSRecord(this.config);
+            var DNSRecords = GetDNSRecords(this.config);
 
-            Log.Debug("Retrieved existing DNS Record: {0}", existingIp);
-
-            if (currentIp != existingIp)
+            Log.Debug("Retrieved existing DNS Records");
+            foreach (KeyValuePair<string, string> d in DNSRecords) {
+            if (currentIp != d.Value)
             {
-                Log.Debug("Existing record did not match retrieved IP, updating!");
+                Log.Debug("Existing record {0} did not match retrieved IP, updating!",d.Key);
 
-                RemoveDNSRecord(this.config, existingIp);
+                RemoveDNSRecord(d.Key, d.Value);
 
                 Log.Debug("Removed existing DNS record.");
 
-                AddDNSRecord(this.config, currentIp);
+                AddDNSRecord(d.Key, currentIp);
 
-                Log.Debug("Added new DNS record for hostname.");
+                Log.Debug("Added new DNS record for {0}.",d.Key);
+            }
             }
         }
 
@@ -70,8 +73,8 @@ namespace DHDns.Library
              *  </data>
          *  </dreamhost>
          */
-
-        public virtual String GetDNSRecord(IConfig config)
+        //TKey is hostname, TValue is existing IP
+        public virtual List<KeyValuePair<string,string>> GetDNSRecords(IConfig config)
         {
             // Send the cmd, get back XML records
             var response = SendCmd(config, "dns-list_records");
@@ -79,39 +82,33 @@ namespace DHDns.Library
             var doc = XDocument.Parse(response);
 
             // TODO Check if 'A' record
-            // TODO Check if 'editable'
+            //Take each record, check if it matches an entry in the config.Hostnames StringCollection, then compile a list from the records and values that were selected.
+            List<KeyValuePair<string, string>> records = new List<KeyValuePair<string, string>>(from data in doc.Element("dreamhost").Descendants("data")
+                                                                                                let r = new
+                                                                                                {
+                                                                                                    Record = data.Element("record").Value,
+                                                                                                    Value = data.Element("value").Value,
+                                                                                                    Editable = data.Element("editable").Value,
+                                                                                                    Type = data.Element("type").Value
+                                                                                                }
+                                                                                                where config.Hostnames.Contains(r.Record) && r.Editable == "1" //make sure that r is one of the records we want(I.E., listed in appconfig and editable)
+                                                                                                select new KeyValuePair<string, string>(r.Record, r.Value));
+        
+            return records; //records may be empty
+       
 
-            var records = from data in doc.Element("dreamhost").Descendants("data")
-                          let r = new
-                          {
-                              Record = data.Element("record").Value,
-                              Value = data.Element("value").Value,
-                              Editable = data.Element("editable").Value,
-                              Type = data.Element("type").Value
-                          }
-                          where r.Record == config.Hostname
-                          select r;
-
-            // We should have one that matches.
-            if (records.Any())
-            {
-                return records.Single().Value;
-            }
-
-            // Otherwise, just return an empty string.
-            return String.Empty;
         }
 
-        public virtual void RemoveDNSRecord(IConfig config, String existingIp)
+        public virtual void RemoveDNSRecord(String hostname, String existingIp)
         {
-            String cmd = String.Format("dns-remove_record&record={0}&value={1}&type=A", config.Hostname, existingIp);
+            String cmd = String.Format("dns-remove_record&record={0}&value={1}&type=A", hostname, existingIp);
 
             var deleteResponse = SendCmd(config, cmd);
         }
-
-        public virtual void AddDNSRecord(IConfig config, String newIpAddress)
+        
+        public virtual void AddDNSRecord(String hostname, String newIpAddress)
         {
-            String cmd = String.Format("dns-add_record&record={0}&value={1}&type=A", config.Hostname, newIpAddress);
+            String cmd = String.Format("dns-add_record&record={0}&value={1}&type=A", hostname, newIpAddress);
 
             var addResponse = SendCmd(config, cmd);
         }
