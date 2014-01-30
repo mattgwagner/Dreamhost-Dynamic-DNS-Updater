@@ -28,20 +28,22 @@ namespace DHDns.Library
             var DNSRecords = GetDNSRecords(this.config);
 
             Log.Debug("Retrieved existing DNS Records");
-            foreach (KeyValuePair<string, string> d in DNSRecords) {
-            if (currentIp != d.Value)
+            foreach (KeyValuePair<string, string> d in DNSRecords)
             {
-                Log.Debug("Existing record {0} did not match retrieved IP, updating!",d.Key);
+                if (currentIp != d.Value)
+                {
+                    Log.Debug("Existing record {0} did not match retrieved IP, updating!", d.Key);
 
-                RemoveDNSRecord(d.Key, d.Value);
+                    RemoveDNSRecord(d.Key, d.Value);
 
-                Log.Debug("Removed existing DNS record.");
+                    Log.Debug("Removed existing DNS record.");
 
-                AddDNSRecord(d.Key, currentIp);
+                    AddDNSRecord(d.Key, currentIp);
 
-                Log.Debug("Added new DNS record for {0}.",d.Key);
+                    Log.Debug("Added new DNS record for {0}.", d.Key);
+                }
             }
-            }
+            Log.Info("Finished UpdateJob");
         }
 
         public virtual String GetCurrentIP(IConfig config)
@@ -73,7 +75,7 @@ namespace DHDns.Library
          *  </dreamhost>
          */
         //TKey is hostname, TValue is existing IP
-        public virtual List<KeyValuePair<string,string>> GetDNSRecords(IConfig config)
+        public virtual List<KeyValuePair<string, string>> GetDNSRecords(IConfig config)
         {
             // Send the cmd, get back XML records
             var response = SendCmd(config, "dns-list_records");
@@ -92,10 +94,8 @@ namespace DHDns.Library
                                                                                                 }
                                                                                                 where config.Hostnames.Contains(r.Record) && r.Editable == "1" //make sure that r is one of the records we want(I.E., listed in appconfig and editable)
                                                                                                 select new KeyValuePair<string, string>(r.Record, r.Value));
-        
-            return records; //records may be empty
-       
 
+            return records; //records may be empty upon return
         }
 
         public virtual void RemoveDNSRecord(String hostname, String existingIp)
@@ -103,28 +103,38 @@ namespace DHDns.Library
             String cmd = String.Format("dns-remove_record&record={0}&value={1}&type=A", hostname, existingIp);
 
             var deleteResponse = SendCmd(config, cmd);
+            Log.Debug("Response after issuing DNS Record delete command: " + deleteResponse); //these responses may be helpful debugging info.
         }
-        
+
         public virtual void AddDNSRecord(String hostname, String newIpAddress)
         {
             String cmd = String.Format("dns-add_record&record={0}&value={1}&type=A", hostname, newIpAddress);
 
             var addResponse = SendCmd(config, cmd);
+            Log.Debug("Response after issuing add DNS Record command: " + addResponse); //these responses may be helpful debugging info.
         }
 
         public virtual String SendCmd(IConfig config, String cmd)
         {
-            var request = WebRequest.CreateHttp(String.Format("{0}?key={1}&unique_id={2}&format=XML&cmd={3}",
-                config.APIUrl,
-                config.APIKey,
-                Guid.NewGuid(),
-                cmd));
-
-            var response = request.GetResponse();
-
-            using (var reader = new StreamReader(response.GetResponseStream()))
+            try
             {
-                return reader.ReadToEnd();
+                var request = WebRequest.CreateHttp(String.Format("{0}?key={1}&unique_id={2}&format=XML&cmd={3}",
+                    config.APIUrl,
+                    config.APIKey,
+                    Guid.NewGuid(),
+                    cmd));
+
+                var response = request.GetResponse();
+
+                using (var reader = new StreamReader(response.GetResponseStream()))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+            catch (Exception Ex)
+            {
+                Log.ErrorException("There was a problem communicating over the network.", Ex);
+                return String.Empty;
             }
         }
     }
