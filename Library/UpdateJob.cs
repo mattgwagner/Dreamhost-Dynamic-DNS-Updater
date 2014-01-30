@@ -52,8 +52,7 @@ namespace DHDns.Library
 
             var response = request.GetResponse();
 
-            using (var stream = response.GetResponseStream())
-            using (var reader = new StreamReader(stream))
+            using (var reader = new StreamReader(response.GetResponseStream()))
             {
                 return reader.ReadToEnd().Replace("\n", String.Empty);
             }
@@ -123,8 +122,7 @@ namespace DHDns.Library
 
             var response = request.GetResponse();
 
-            using (var stream = response.GetResponseStream())
-            using (var reader = new StreamReader(stream))
+            using (var reader = new StreamReader(response.GetResponseStream()))
             {
                 return reader.ReadToEnd();
             }
