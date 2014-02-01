@@ -28,7 +28,7 @@ namespace DHDns.Library
 
             var DNSRecords = GetDNSRecords(this.config);
 
-            
+
             foreach (KeyValuePair<string, string> d in DNSRecords)
             {
                 if (currentIp != d.Value)
@@ -76,32 +76,36 @@ namespace DHDns.Library
          *  </dreamhost>
          */
         //TKey is hostname, TValue is existing IP
-        public virtual List<KeyValuePair<string, string>> GetDNSRecords(IConfig config)
+        public virtual IEnumerable<KeyValuePair<string, string>> GetDNSRecords(IConfig config)
         {
             // Send the cmd, get back XML records
             var response = SendCmd(config, "dns-list_records");
             XDocument doc;
+
             try
             {
-                 doc = XDocument.Parse(response);
+                doc = XDocument.Parse(response);
             }
             catch (Exception ex)
             {
                 Log.ErrorException("failed to parse DNS records from DreamHost", ex);
                 return new List<KeyValuePair<string, string>>(); //return an empty list to prevent cascading exceptions
             };
+
             // TODO Check if 'A' record
+
             //Take each record, check if it matches an entry in the config.Hostnames StringCollection, then compile a list from the records and values that were selected.
-            List<KeyValuePair<string, string>> records = new List<KeyValuePair<string, string>>(from data in doc.Element("dreamhost").Descendants("data")
-                                                                                                let r = new
-                                                                                                {
-                                                                                                    Record = data.Element("record").Value,
-                                                                                                    Value = data.Element("value").Value,
-                                                                                                    Editable = data.Element("editable").Value,
-                                                                                                    Type = data.Element("type").Value
-                                                                                                }
-                                                                                                where config.Hostnames.Contains(r.Record) && r.Editable == "1" //make sure that r is one of the records we want(I.E., listed in appconfig and editable)
-                                                                                                select new KeyValuePair<string, string>(r.Record, r.Value));
+            var records = from data in doc.Element("dreamhost").Descendants("data")
+                          let r = new
+                          {
+                              Record = data.Element("record").Value,
+                              Value = data.Element("value").Value,
+                              Editable = data.Element("editable").Value,
+                              Type = data.Element("type").Value
+                          }
+                          where config.Hostnames.Contains(r.Record) && r.Editable == "1" //make sure that r is one of the records we want(I.E., listed in appconfig and editable)
+                          select new KeyValuePair<string, string>(r.Record, r.Value);
+
             Log.Debug("Retrieved existing DNS Records");
             return records; //records may be empty upon return
         }
@@ -111,6 +115,7 @@ namespace DHDns.Library
             String cmd = String.Format("dns-remove_record&record={0}&value={1}&type=A", hostname, existingIp);
 
             var deleteResponse = SendCmd(config, cmd);
+
             Log.Debug("Response after issuing DNS Record delete command: " + deleteResponse); //these responses may be helpful debugging info.
 
         }
@@ -120,6 +125,7 @@ namespace DHDns.Library
             String cmd = String.Format("dns-add_record&record={0}&value={1}&type=A", hostname, newIpAddress);
 
             var addResponse = SendCmd(config, cmd);
+
             Log.Debug("Response after issuing add DNS Record command: " + addResponse); //these responses may be helpful debugging info.
         }
 
