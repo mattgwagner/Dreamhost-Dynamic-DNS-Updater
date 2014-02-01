@@ -5,7 +5,7 @@ A small Windows Service that will update Dreamhost's DNS entries to point to you
 
 ## Building ##
 
-The project is built using C# in Visual Studio 2012. You can also build the project using `msbuild` via the `build.cmd` script in the root of the project.
+The project is built using C# in Visual Studio 2013. You can also build the project using `msbuild` via the `build.cmd` script in the root of the project.
 
 Simple logging is doing via NLog to `Logging.log` where the executable is run, but can be configured via *NLog.config*.
 

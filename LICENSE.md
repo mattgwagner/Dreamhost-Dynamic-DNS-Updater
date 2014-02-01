@@ -1,4 +1,4 @@
-Copyright 2013 Matt Wagner and other contributors
+Copyright 2014 Matt Wagner and other contributors
 http://mattgwagner.com
 
 Permission is hereby granted, free of charge, to any person obtaining
