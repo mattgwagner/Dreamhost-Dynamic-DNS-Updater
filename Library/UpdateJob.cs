@@ -8,8 +8,6 @@ using System.Xml.Linq;
 using System.Collections.Generic;
 namespace DHDns.Library
 {
-
-
     public class UpdateJob : IJob
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -19,17 +17,11 @@ namespace DHDns.Library
         {
             Log.Info("Starting UpdateJob...");
 
-            // Get current IP
             var currentIp = GetCurrentIP(this.config);
 
-            Log.Debug("Retrieved current IP: {0}", currentIp);
+            Log.Info("Retrieved current IP: {0}", currentIp);
 
-            // Get the existing record
-
-            var DNSRecords = GetDNSRecords(this.config);
-
-
-            foreach (KeyValuePair<string, string> d in DNSRecords)
+            foreach (KeyValuePair<string, string> d in GetDNSRecords(this.config))
             {
                 if (currentIp != d.Value)
                 {
@@ -44,6 +36,7 @@ namespace DHDns.Library
                     Log.Info("Added new DNS record for {0}.", d.Key);
                 }
             }
+
             Log.Info("Finished UpdateJob");
         }
 
@@ -80,6 +73,7 @@ namespace DHDns.Library
         {
             // Send the cmd, get back XML records
             var response = SendCmd(config, "dns-list_records");
+
             XDocument doc;
 
             try
@@ -107,6 +101,7 @@ namespace DHDns.Library
                           select new KeyValuePair<string, string>(r.Record, r.Value);
 
             Log.Debug("Retrieved existing DNS Records");
+
             return records; //records may be empty upon return
         }
 
