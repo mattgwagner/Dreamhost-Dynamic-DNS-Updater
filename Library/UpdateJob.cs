@@ -36,6 +36,10 @@ namespace DHDns.Library
 
                     Log.Info("Added new DNS record for {0}.", d.Key);
                 }
+                else
+                {
+                    Log.Info("DNS record matches, finshing.")
+                }
             }
 
             Log.Info("Finished UpdateJob");
