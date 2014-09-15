@@ -38,7 +38,7 @@ namespace DHDns.Library
                 }
                 else
                 {
-                    Log.Info("DNS record matches, finshing.")
+                    Log.Info("DNS record matches, finshing.");
                 }
             }
 
