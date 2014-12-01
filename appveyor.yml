@@ -1,0 +1,4 @@
+# AppVeyor CI build file
+
+build:
+  project: Dreamhost_DNS_Updater.sln
