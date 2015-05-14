@@ -91,8 +91,6 @@ namespace DHDns.Library
                 return new List<KeyValuePair<string, string>>(); //return an empty list to prevent cascading exceptions
             };
 
-            // TODO Check if 'A' record
-
             //Take each record, check if it matches an entry in the config.Hostnames StringCollection, then compile a list from the records and values that were selected.
             var records = from data in doc.Element("dreamhost").Descendants("data")
                           let r = new
@@ -102,10 +100,9 @@ namespace DHDns.Library
                               Editable = data.Element("editable").Value,
                               Type = data.Element("type").Value
                           }
-                          where config.Hostnames.Contains(r.Record) && r.Editable == "1" //make sure that r is one of the records we want(I.E., listed in appconfig and editable)
+                          where config.Hostnames.Contains(r.Record) && r.Editable == "1" && r.Type.Equals("A") //make sure that r is one of the records we want(I.E., listed in appconfig and editable)
                           select new KeyValuePair<string, string>(r.Record, r.Value);
-
-            Log.Debug("Retrieved existing DNS Records");
+            Log.Debug("Retrieved existing DNS Records. Matching Records Count: {0}", records.Count());
 
             return records; //records may be empty upon return
         }
