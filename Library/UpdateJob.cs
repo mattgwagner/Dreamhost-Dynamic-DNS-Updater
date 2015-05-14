@@ -19,6 +19,11 @@ namespace DHDns.Library
             Log.Info("Starting UpdateJob...");
 
             var currentIp = GetCurrentIP(this.config);
+            if (currentIp == null)
+            {
+                Log.Info("Cancelling UpdateJob...");
+                return;
+            }
 
             Log.Info("Retrieved current IP: {0}", currentIp);
 
@@ -47,15 +52,20 @@ namespace DHDns.Library
 
         public virtual String GetCurrentIP(IConfig config)
         {
-            // TODO Make this swappable?
-
-            var request = WebRequest.CreateHttp("http://www.joshlange.net/cgi/get_ip.pl");
-
-            var response = request.GetResponse();
-
-            using (var reader = new StreamReader(response.GetResponseStream()))
+            var request = WebRequest.CreateHttp(config.IPLookupService);
+            request.Timeout = 15000;
+            try
             {
-                return reader.ReadToEnd().Replace("\n", String.Empty);
+                var response = request.GetResponse();
+                using (var reader = new StreamReader(response.GetResponseStream()))
+                {
+                    return reader.ReadToEnd().Replace("\n", String.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorException("Failed to retrieve IP", ex);
+                return null;
             }
         }
 

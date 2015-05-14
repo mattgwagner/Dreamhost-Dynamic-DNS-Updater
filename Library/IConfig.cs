@@ -18,6 +18,8 @@ namespace DHDns.Library
         StringCollection Hostnames { get; }
 
         int UpdateInterval { get; }
+
+        String IPLookupService { get; }
     }
 
     /// <summary>
@@ -39,6 +41,8 @@ namespace DHDns.Library
         public StringCollection Hostnames { get { return (CommaDelimitedStringCollection)(new CommaDelimitedStringCollectionConverter()).ConvertFrom(ConfigurationManager.AppSettings["HostnameCSV"]); } }
 
         public int UpdateInterval { get { return int.Parse(ConfigurationManager.AppSettings["Update_Interval_Minutes"]); } }
+
+        public string IPLookupService { get { return ConfigurationManager.AppSettings["IP_Lookup_Service"]; } }
     }
 
     public class TestConfig : IConfig
@@ -54,5 +58,7 @@ namespace DHDns.Library
         public StringCollection Hostnames { get; set; }
 
         public int UpdateInterval { get; set; }
+
+        public String IPLookupService { get; set; }
     }
 }
