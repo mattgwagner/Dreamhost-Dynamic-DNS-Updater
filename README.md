@@ -5,6 +5,8 @@ A small Windows Service that will update Dreamhost's DNS entries to point to you
 
 ## Building ##
 
+[![Build status](https://ci.appveyor.com/api/projects/status/rb58kg4hcaqlx3qq?svg=true)](https://ci.appveyor.com/project/mattgwagner/dreamhost-dynamic-dns-updater)
+
 The project is built using C# in Visual Studio 2013. You can also build the project using `msbuild` via the `build.cmd` script in the root of the project.
 
 Simple logging is doing via NLog to `Logging.log` where the executable is run, but can be configured via *NLog.config*.
