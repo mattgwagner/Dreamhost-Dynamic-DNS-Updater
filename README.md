@@ -12,6 +12,9 @@ The project is built using C# in Visual Studio 2013. You can also build the proj
 Simple logging is doing via NLog to `Logging.log` where the executable is run, but can be configured via *NLog.config*.
 
 ## Installation ##
+First, in the Dreamhost Panel, create the custom DNS entry for the domain you want to have resolve to your dynamic IP.
+TIP: It should be an A record, and the value should be a valid IP address `xxx.xxx.xxx.xxx`.
+TIP: To ensure the service works, set the initial IP to something *other* than your actual IP. This way you can confirm the service is working by seeing that the fake IP is updated with your actual IP.
 
 After the project is built, add your DreamHost API key and host information into the app.config file.
 
