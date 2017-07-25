@@ -16,7 +16,7 @@ First, in the Dreamhost Panel, create the custom DNS entry for the domain you wa
 TIP: It should be an A record, and the value should be a valid IP address `xxx.xxx.xxx.xxx`.
 TIP: To ensure the service works, set the initial IP to something *other* than your actual IP. This way you can confirm the service is working by seeing that the fake IP is updated with your actual IP.
 
-After the project is built, add your DreamHost API key and host information into the app.config file.
+After the project is built, add your DreamHost API key and host information into the `Service/App.config` file.
 
 Run `install.cmd` from the root of the directory from the command line to install the Windows Service.
 
