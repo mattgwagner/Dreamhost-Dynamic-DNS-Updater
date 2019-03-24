@@ -3,6 +3,7 @@ using NLog;
 using NLog.Config;
 using Quartz;
 using Quartz.Impl;
+using System.Net;
 using Topshelf;
 
 namespace DHDns.Service
@@ -11,6 +12,9 @@ namespace DHDns.Service
     {
         private static void Main(string[] args)
         {
+            // Force TLS 1.2
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
             HostFactory.Run(x =>
             {
                 x.Service<TaskService>();
